@@ -26,7 +26,6 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  
 
   body {
     background: var(--dark);
@@ -37,6 +36,7 @@
     flex-direction: column;
     overflow: hidden;
   }
+
   /* ── Header ─────────────────────────────────────── */
   header {
     background: linear-gradient(135deg, var(--navy) 0%, #0F1923 100%);
@@ -301,6 +301,24 @@
     line-height: 1.4;
   }
 
+  .about-panel {
+    margin-top: 24px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+
+  .about-panel p { margin-bottom: 6px; }
+  .about-panel p:last-child { margin-bottom: 0; }
+  .about-panel strong { color: rgba(255,255,255,0.75); }
+  .about-panel a { color: var(--gold); text-decoration: none; }
+  .about-panel a:hover { color: var(--gold-lt); }
+
   .subscribe-btn {
     background: var(--gold);
     color: var(--dark);
@@ -345,6 +363,23 @@
     border-color: var(--gold);
     color: var(--gold-lt);
   }
+
+  .footer-cta {
+    text-align: center;
+    margin-top: 6px;
+    margin-bottom: 4px;
+  }
+
+  .footer-cta a {
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+  }
+
+  .footer-cta a:hover { color: var(--gold-lt); }
 
   @media print {
     header, footer, .header-actions { display: none !important; }
@@ -486,6 +521,10 @@
         <div class="s-text">Revenue has plateaued. What should I be looking at?</div>
       </button>
     </div>
+    <div class="about-panel">
+      <p><strong>🤖 AI-Powered Advisory</strong> &nbsp;·&nbsp; This is an AI digital twin built exclusively on Richard Lewine's 40 years of proprietary consulting frameworks, methodologies, and expertise. It is not a generic AI — every response draws from Richard's own work.</p>
+      <p><strong>Subscribers</strong> receive unlimited access and benefit from ongoing updates as Richard's frameworks evolve. &nbsp;·&nbsp; <strong>Questions?</strong> <a href="mailto:rslewine@rslgo.com">rslewine@rslgo.com</a></p>
+    </div>
   </div>
 </div>
 
@@ -498,6 +537,7 @@
     </button>
   </div>
   <div class="footer-note">&copy; 2026 RSL Consulting Group &nbsp;·&nbsp; rslgo.com &nbsp;·&nbsp; Confidential advisory session &nbsp;·&nbsp; <em>If a response stops mid-sentence, simply type "continue"</em></div>
+  <div class="footer-cta"><a href="mailto:rslewine@rslgo.com">Work with Richard directly →</a></div>
 </footer>
 
 <script>
