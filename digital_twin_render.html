@@ -3,7 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Richard Lewine | Executive Advisor</title>
+<title>Absolutely Richard | AI Executive Advisor</title>
+<meta name="description" content="40 years of organizational development expertise, available on demand. Ask Richard about vision, strategy, hiring, culture, or succession — and get real advisory clarity in minutes.">
+<!-- Open Graph / LinkedIn -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://absolutelyrichard.com">
+<meta property="og:title" content="Absolutely Richard | AI Executive Advisor">
+<meta property="og:description" content="40 years of organizational development expertise, available on demand. Better clarity in 5 minutes than hours with a coach.">
+<meta property="og:site_name" content="Absolutely Richard">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Absolutely Richard | AI Executive Advisor">
+<meta name="twitter:description" content="40 years of organizational development expertise, available on demand.">
 <style>
   /* ── Tokens ─────────────────────────────────────── */
   :root {
@@ -427,6 +437,75 @@
 
   .footer-cta a:hover { color: var(--gold-lt); }
 
+  /* ── Coming Soon Banner ──────────────────────────── */
+  .coming-soon-banner {
+    text-align: center;
+    margin-top: 10px;
+    padding: 10px 16px;
+    background: rgba(200,146,42,0.08);
+    border: 1px solid rgba(200,146,42,0.25);
+    border-radius: 8px;
+    max-width: 820px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .coming-soon-badge {
+    background: var(--gold);
+    color: var(--dark);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .coming-soon-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    white-space: nowrap;
+  }
+
+  .coming-soon-form {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .coming-soon-form input {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(200,146,42,0.3);
+    border-radius: 5px;
+    padding: 5px 10px;
+    color: var(--white);
+    font-size: 12px;
+    width: 170px;
+    outline: none;
+  }
+
+  .coming-soon-form input:focus { border-color: var(--gold); }
+
+  .coming-soon-form button {
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    border-radius: 5px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .coming-soon-form button:hover { background: var(--gold-lt); }
+
   @media print {
     header, footer, .header-actions { display: none !important; }
     body { background: white; color: black; }
@@ -617,6 +696,15 @@
   </div>
   <div class="footer-note">&copy; 2026 RSL Consulting Group &nbsp;·&nbsp; rslgo.com &nbsp;·&nbsp; Confidential advisory session &nbsp;·&nbsp; <em>If a response stops mid-sentence, simply type "continue"</em></div>
   <div class="footer-cta"><a href="https://mail.google.com/mail/?view=cm&to=rslewine@rslgo.com&su=Absolutely Richard Inquiry" target="_blank">Work with Richard directly →</a></div>
+  <div class="coming-soon-banner">
+    <span class="coming-soon-badge">Coming Soon</span>
+    <span class="coming-soon-text">24-Hour Day Pass & 5-Prompt Pack — both just $19</span>
+    <div class="coming-soon-form" id="notify-form">
+      <input type="email" id="notify-email" placeholder="your@email.com" />
+      <button onclick="submitNotify()">Notify Me</button>
+    </div>
+    <div id="notify-thanks" style="display:none;font-size:12px;color:var(--gold);">You're on the list — we'll let you know when it launches.</div>
+  </div>
 </footer>
 
 <script>
@@ -885,6 +973,15 @@ async function handleSend() {
   isTyping = false;
   sendBtn.disabled = false;
   input.focus();
+}
+
+function submitNotify() {
+  const email = document.getElementById('notify-email').value.trim();
+  if (!email || !email.includes('@')) return;
+  // Send notification email to Richard
+  window.open(`https://mail.google.com/mail/?view=cm&to=rslewine@rslgo.com&su=Notify Me: AR Pricing&body=Please notify me when Day Pass and 5-Prompt pricing launches: ${email}`, '_blank');
+  document.getElementById('notify-form').style.display = 'none';
+  document.getElementById('notify-thanks').style.display = 'block';
 }
 
 function toggleFaq() {
