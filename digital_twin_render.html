@@ -969,12 +969,49 @@ BEHAVIORAL RULES FOR THIS CONVERSATION
 // ── Config ────────────────────────────────────────────────────────────────────
 const BACKEND_URL = 'https://absolutely-richard-backend.onrender.com/api/chat';
 
-// Check if arriving from redeem page
-const _params = new URLSearchParams(window.location.search);
-if (_params.get('unlocked') === 'true') {
+// ── Access code ───────────────────────────────────────────────────────────────
+// Chatting here requires a valid access code. The server enforces it; this
+// just keeps the page in step so visitors see why they can't type.
+const REDEEM_URL = 'https://rslewine-art.github.io/absolutely-richard-frontend/redeem.html';
+function getStoredCode() {
+  try { return localStorage.getItem('ar_access_code') || sessionStorage.getItem('ar_access_code'); }
+  catch (e) { return sessionStorage.getItem('ar_access_code'); }
+}
+function clearStoredCode() {
+  try { localStorage.removeItem('ar_access_code'); } catch (e) {}
+  sessionStorage.removeItem('ar_access_code');
+}
+let accessCode = getStoredCode();
+
+function showAccessStatus(info) {
+  const el = document.getElementById('challenge-prompt');
+  let note = '';
+  if (info && info.promptsLeft != null) note = ` &nbsp;·&nbsp; ${info.promptsLeft} prompt${info.promptsLeft === 1 ? '' : 's'} remaining`;
+  el.innerHTML = 'Enter your challenge here &nbsp;↓' + note;
+}
+
+function lockForAccess(reason) {
+  accessCode = null;
+  const box = document.getElementById('user-input');
+  box.disabled = true;
+  box.placeholder = reason || 'Enter an access code to begin your session with Richard.';
+  document.getElementById('send-btn').disabled = true;
+  document.getElementById('challenge-prompt').style.display = 'none';
+  document.getElementById('coming-soon-section').style.display = 'block';
+}
+
+function unlockForAccess(info) {
   document.getElementById('coming-soon-section').style.display = 'none';
   document.getElementById('challenge-prompt').style.display = 'block';
-  // Clean URL without reloading
+  showAccessStatus(info);
+  const box = document.getElementById('user-input');
+  box.disabled = false;
+  box.placeholder = 'Ask Richard anything about your organization, leadership, or growth…';
+  document.getElementById('send-btn').disabled = false;
+}
+
+// Clean ?unlocked=true from the URL if we arrived from the redeem page
+if (new URLSearchParams(window.location.search).get('unlocked')) {
   window.history.replaceState({}, '', window.location.pathname);
 }
 
@@ -988,8 +1025,22 @@ const input   = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
 const welcome = document.getElementById('welcome');
 
-// Send button active on load — no API key needed from user
-sendBtn.disabled = false;
+// Check the stored code on load
+const stored = accessCode;
+lockForAccess();
+if (stored) {
+  fetch(BACKEND_URL.replace('/api/chat', '/api/validate-code'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: stored })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d.valid) { accessCode = stored; unlockForAccess(d); }
+      else { clearStoredCode(); lockForAccess((d.error || 'Your access code is no longer active') + '. Choose an option above to continue.'); }
+    })
+    .catch(() => { accessCode = stored; unlockForAccess(null); }); // server waking up — let the chat call decide
+}
 
 // ── Input auto-resize ─────────────────────────────────────────────────────────
 input.addEventListener('input', () => {
@@ -1008,6 +1059,7 @@ sendBtn.addEventListener('click', handleSend);
 
 // ── Starter buttons ───────────────────────────────────────────────────────────
 function sendStarter(btn) {
+  if (!accessCode) { window.location.href = REDEEM_URL; return; }
   const text = btn.querySelector('.s-text').textContent;
   input.value = text;
   handleSend();
@@ -1089,6 +1141,7 @@ function removeTyping() {
 async function handleSend() {
   const text = input.value.trim();
   if (!text || isTyping) return;
+  if (!accessCode) { lockForAccess(); return; }
 
   isTyping = true;
   sendBtn.disabled = true;
@@ -1105,19 +1158,31 @@ async function handleSend() {
     const response = await fetch(BACKEND_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: conversationHistory })
+      body: JSON.stringify({ messages: conversationHistory, accessCode })
     });
 
     const data = await response.json();
     removeTyping();
 
-    if (data.error) {
+    if (data.limitReached) {
+      conversationHistory.pop();
+      renderMessage('assistant', `${data.error}. To keep going, choose a Day Pass, a 5-Prompt Pack, or unlimited access below.`);
+      clearStoredCode();
+      lockForAccess(data.error + '.');
+      isTyping = false;
+      return;
+    } else if (data.error) {
       renderMessage('assistant', `Let's look at the way it really is: we ran into a temporary connection issue. Please try again in a moment.`);
       console.error('Backend error:', data.error);
     } else {
       const reply = data.content[0].text;
       conversationHistory.push({ role: 'assistant', content: reply });
       renderMessage('assistant', reply);
+      if (data.access) showAccessStatus(data.access);
+      if (data.access && data.access.promptsLeft === 0) {
+        clearStoredCode();
+        lockForAccess('That was your last prompt on this code. Choose an option above to continue.');
+      }
     }
 
   } catch (err) {

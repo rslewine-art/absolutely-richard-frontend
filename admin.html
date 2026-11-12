@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AR Pass Code Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root { --bg:#0D1420; --surface:#152035; --border:rgba(184,148,42,0.25); --gold:#B8942A; --gold-lt:#D4AE45;
+          --text:#E8E4DC; --muted:#7A8599; --ok:#3DA06A; --bad:#C0334A; color-scheme:dark; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font:15px/1.6 'Inter',system-ui,sans-serif; padding:40px 16px; }
+  .wrap { max-width:640px; margin:0 auto; display:flex; flex-direction:column; gap:24px; }
+  .header { text-align:center; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .eyebrow { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); }
+  h1, h2, .card-title { font-family:'Playfair Display',Georgia,serif; }
+  h1 { font-size:26px; font-weight:600; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:16px; }
+  .card-title { font-size:17px; color:var(--gold); }
+  label { display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--text); font-weight:500; }
+  input, select { width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(184,148,42,0.3); border-radius:8px;
+                  padding:11px 14px; color:var(--text); font:inherit; outline:none; }
+  input:focus, select:focus { border-color:var(--gold); }
+  select option { background:#152035; }
+  .btn { width:100%; padding:13px 20px; border:none; border-radius:8px; font:600 15px 'Inter',sans-serif; cursor:pointer;
+         background:var(--gold); color:#0D1420; }
+  .btn:hover { background:var(--gold-lt); } .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-sm { padding:6px 12px; font:500 13px 'Inter',sans-serif; border-radius:6px; background:rgba(184,148,42,0.15);
+            border:1px solid var(--border); color:var(--gold); cursor:pointer; }
+  .btn-sm:hover { background:rgba(184,148,42,0.25); }
+  .btn-sm.danger { color:var(--bad); border-color:rgba(192,51,74,0.4); background:rgba(192,51,74,0.08); }
+  .result { display:none; background:rgba(46,125,82,0.1); border:1px solid rgba(46,125,82,0.4); border-radius:8px; padding:16px; }
+  .result.show { display:block; } .result.error { background:rgba(155,35,53,0.1); border-color:rgba(155,35,53,0.4); }
+  .result-code { font:bold 28px 'Courier New',monospace; letter-spacing:.15em; color:var(--gold); margin-bottom:8px; }
+  .meta { font-size:13px; color:var(--muted); line-height:1.8; } .meta strong { color:var(--text); }
+  .copy-row { display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .copied { font-size:12px; color:var(--ok); display:none; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; color:var(--muted); font-weight:500; text-transform:uppercase; font-size:11px; letter-spacing:.05em;
+       padding:6px 8px; border-bottom:1px solid var(--border); }
+  td { padding:9px 8px; border-bottom:1px solid rgba(184,148,42,0.1); vertical-align:top; }
+  .mono { font-family:'Courier New',monospace; font-weight:bold; color:var(--gold); white-space:nowrap; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; white-space:nowrap;
+           background:rgba(184,148,42,0.15); color:var(--gold); }
+  .badge.off { background:rgba(155,35,53,0.15); color:var(--bad); }
+  .note { color:var(--muted); font-size:12px; }
+  .filter { display:flex; gap:8px; align-items:center; font-size:13px; color:var(--muted); }
+  .filter input { width:auto; }
+  #lock { max-width:380px; margin:60px auto 0; text-align:center; display:flex; flex-direction:column; gap:18px; }
+  #lock p { color:var(--muted); font-size:14px; }
+  .err { color:var(--bad); font-size:13px; display:none; }
+  #main { display:none; }
+</style>
+</head>
+<body>
+
+<div id="lock">
+  <div style="font-size:36px">🔐</div>
+  <h2>Absolutely Richard<br>Admin Console</h2>
+  <p>Enter your admin key to continue.</p>
+  <input type="password" id="key" placeholder="Admin key" autocomplete="current-password">
+  <div class="err" id="lock-err">Incorrect key. Try again.</div>
+  <div class="note" id="lock-wait" style="display:none">Waking the server — this can take up to a minute…</div>
+  <button class="btn" id="unlock-btn" onclick="unlock()">Unlock →</button>
+</div>
+
+<div id="main"><div class="wrap">
+  <div class="header"><div class="eyebrow">RSL Consulting Group</div><h1>Pass Code Admin</h1></div>
+
+  <div class="card">
+    <div class="card-title">Issue a New Code</div>
+    <label>Code type
+      <select id="type">
+        <option value="complimentary_5">Complimentary — 5 prompts (free, for prospects)</option>
+        <option value="prompt_pack_5">5-Prompt Pack — $19 purchase</option>
+        <option value="day_pass">24-Hour Day Pass — $19 purchase</option>
+        <option value="subscriber">Subscriber — unlimited ($197/mo)</option>
+      </select>
+    </label>
+    <label>Recipient (for your records)
+      <input type="text" id="recipient" placeholder="e.g. Jill Smith, Acme Corp">
+    </label>
+    <button class="btn" id="issue-btn" onclick="issue()">Generate Code →</button>
+    <div class="result" id="result">
+      <div class="result-code" id="r-code"></div>
+      <div class="meta" id="r-meta"></div>
+      <div class="copy-row">
+        <button class="btn-sm" onclick="copy(document.getElementById('r-code').textContent)">Copy code</button>
+        <button class="btn-sm" onclick="copy(message())">Copy text message</button>
+        <span class="copied" id="copied">Copied!</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div class="card-title">Codes</div>
+      <div class="filter"><label style="flex-direction:row;align-items:center;gap:6px;font-weight:400;color:var(--muted)">
+        <input type="checkbox" id="show-all" onchange="render()"> Show used up / expired</label>
+        <button class="btn-sm" onclick="load()">Refresh</button></div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Code</th><th>Type</th><th>For</th><th>Status</th><th></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="5" class="note">Loading…</td></tr></tbody>
+    </table></div>
+  </div>
+  <div class="note" style="text-align:center">Absolutely Richard · RSL Consulting Group</div>
+</div></div>
+
+<script>
+const BACKEND = 'https://absolutely-richard-backend.onrender.com';
+const REDEEM  = 'https://rslewine-art.github.io/absolutely-richard-frontend/redeem.html';
+const LABELS = {
+  complimentary_5: 'Complimentary · 5 prompts', prompt_pack_5: '5-Prompt Pack', day_pass: 'Day Pass',
+  subscriber: 'Subscriber', complimentary_30: '30-Day (old)'
+};
+let KEY = '', CODES = {};
+
+function post(path, body) {
+  return fetch(BACKEND + path, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret: KEY, ...body }) }).then(r => r.json().then(d => ({ status: r.status, d })));
+}
+document.getElementById('key').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+async function unlock() {
+  KEY = document.getElementById('key').value.trim();
+  if (!KEY) return;
+  const btn = document.getElementById('unlock-btn'), wait = document.getElementById('lock-wait');
+  btn.disabled = true; document.getElementById('lock-err').style.display = 'none';
+  const t = setTimeout(() => wait.style.display = 'block', 3000);
+  try {
+    const { status, d } = await post('/api/admin/list-codes', {});
+    if (status !== 200) throw 0;
+    CODES = d;
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    render();
+  } catch (e) { document.getElementById('lock-err').style.display = 'block'; KEY = ''; }
+  clearTimeout(t); wait.style.display = 'none'; btn.disabled = false;
+}
+
+async function issue() {
+  const type = document.getElementById('type').value, note = document.getElementById('recipient').value.trim();
+  const btn = document.getElementById('issue-btn'), box = document.getElementById('result');
+  btn.disabled = true; btn.textContent = 'Generating…'; box.classList.remove('show', 'error');
+  try {
+    const { d } = await post('/api/admin/generate-code', { type, note });
+    if (d.error) throw new Error(d.error);
+    document.getElementById('r-code').textContent = d.code;
+    document.getElementById('r-meta').innerHTML =
+      (note ? `<strong>For:</strong> ${esc(note)}<br>` : '') +
+      `<strong>Type:</strong> ${esc(d.label)}<br>` +
+      (d.promptsLeft != null ? `<strong>Prompts:</strong> ${d.promptsLeft}<br>` : '') +
+      (d.type === 'day_pass' ? `<strong>24 hours start:</strong> at first message<br>` : '') +
+      (d.expiresAt ? `<strong>Must be used by:</strong> ${fmt(d.expiresAt)}<br>` : '<strong>Expires:</strong> never (revoke if they cancel)<br>');
+    box.classList.add('show'); btn.textContent = 'Generate Another →';
+    load();
+  } catch (e) {
+    box.classList.add('show', 'error');
+    document.getElementById('r-code').textContent = '';
+    document.getElementById('r-meta').textContent = 'Error: ' + e.message;
+    btn.textContent = 'Generate Code →';
+  }
+  btn.disabled = false;
+}
+
+function message() {
+  const code = document.getElementById('r-code').textContent;
+  const type = document.getElementById('type').value;
+  const who = document.getElementById('recipient').value.trim().split(/[ ,]/)[0];
+  const hi = who ? `${who}, here's` : `Here's`;
+  const what = {
+    complimentary_5: `a complimentary code for 5 conversations with my digital twin, Absolutely Richard`,
+    prompt_pack_5:   `your 5-Prompt Pack code for Absolutely Richard`,
+    day_pass:        `your Day Pass code for Absolutely Richard. Your 24 hours start with your first message`,
+    subscriber:      `your subscriber code for Absolutely Richard — unlimited access`
+  }[type];
+  return `${hi} ${what}.\n\n${code}\n\nEnter it here: ${REDEEM}\n\n— Richard`;
+}
+
+async function load() {
+  const { d } = await post('/api/admin/list-codes', {});
+  CODES = d; render();
+}
+
+function status(rec) {
+  const now = new Date();
+  if (rec.revoked) return ['Revoked', false];
+  if (rec.expiresAt && now > new Date(rec.expiresAt)) return ['Expired ' + fmt(rec.expiresAt), false];
+  if (rec.activeUntil && now > new Date(rec.activeUntil)) return ['Day Pass ended', false];
+  if (rec.promptsLeft != null && rec.promptsLeft <= 0) return ['All prompts used', false];
+  if (rec.activeUntil) return ['Active until ' + fmtTime(rec.activeUntil), true];
+  if (rec.promptsLeft != null) return [`${rec.promptsLeft} of 5 left` + (rec.used ? '' : ' · not used yet'), true];
+  if (rec.type === 'day_pass') return ['Not used yet', true];
+  if (rec.expiresAt) return ['Valid to ' + fmt(rec.expiresAt), true];
+  return ['Active', true];
+}
+
+function render() {
+  const all = document.getElementById('show-all').checked;
+  const rows = Object.entries(CODES)
+    .sort((a, b) => new Date(b[1].createdAt) - new Date(a[1].createdAt))
+    .map(([code, rec]) => ({ code, rec, st: status(rec) }))
+    .filter(x => all || x.st[1]);
+  const tb = document.getElementById('rows');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="5" class="note">${all ? 'No codes yet.' : 'No active codes.'}</td></tr>`; return; }
+  tb.innerHTML = rows.map(({ code, rec, st }) => `<tr>
+    <td class="mono">${code}<div class="note">${fmt(rec.createdAt)}</div></td>
+    <td><span class="badge${st[1] ? '' : ' off'}">${esc(LABELS[rec.type] || rec.type)}</span></td>
+    <td>${esc(rec.note || '—')}</td>
+    <td class="note">${esc(st[0])}</td>
+    <td>${st[1] ? `<button class="btn-sm danger" onclick="revoke('${code}', this)">Revoke</button>` : ''}</td>
+  </tr>`).join('');
+}
+
+async function revoke(code, btn) {
+  if (btn.dataset.sure !== '1') { btn.dataset.sure = '1'; btn.textContent = 'Click to confirm'; return; }
+  btn.disabled = true;
+  await post('/api/admin/revoke-code', { code });
+  load();
+}
+
+function copy(s) {
+  const done = () => { const c = document.getElementById('copied'); c.style.display = 'inline'; setTimeout(() => c.style.display = 'none', 2000); };
+  navigator.clipboard.writeText(s).then(done).catch(() => {
+    const ta = document.createElement('textarea'); ta.value = s; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove(); done();
+  });
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const fmt = iso => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+const fmtTime = iso => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+</script>
+</body>
+</html>

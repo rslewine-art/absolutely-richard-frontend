@@ -211,7 +211,7 @@
     <p class="subtitle">Your code was sent by text after payment.<br>Enter it below to begin your session.</p>
 
     <div class="input-wrap">
-      <input type="text" id="code-input" placeholder="e.g. A3F9C2B1" maxlength="10" autocomplete="off" autocorrect="off" spellcheck="false" />
+      <input type="text" id="code-input" placeholder="e.g. RSL-A3F9C2B1" maxlength="16" autocomplete="off" autocorrect="off" spellcheck="false" />
     </div>
 
     <div class="error" id="error-msg"></div>
@@ -257,7 +257,8 @@ document.getElementById('code-input').addEventListener('input', e => {
 });
 
 async function validateCode() {
-  const code = document.getElementById('code-input').value.trim().toUpperCase();
+  let code = document.getElementById('code-input').value.trim().toUpperCase().replace(/\s+/g, '');
+  if (/^[0-9A-F]{8}$/.test(code)) code = 'RSL-' + code; // accept codes typed without the RSL- prefix
   const errorEl = document.getElementById('error-msg');
   const btn = document.getElementById('unlock-btn');
 
@@ -285,12 +286,11 @@ async function validateCode() {
     const data = await res.json();
 
     if (data.valid) {
-      // Store code in sessionStorage so the main page can use it
+      // Remember the code in this browser so the main page can use it on every visit
+      try {
+        localStorage.setItem('ar_access_code', code);
+      } catch (e) {}
       sessionStorage.setItem('ar_access_code', code);
-      sessionStorage.setItem('ar_access_type', data.type);
-      if (data.promptsLeft !== null) {
-        sessionStorage.setItem('ar_prompts_left', data.promptsLeft);
-      }
 
       // Show success, hide everything else
       document.getElementById('form-section').style.display = 'none';
@@ -298,9 +298,10 @@ async function validateCode() {
       const successSection = document.getElementById('success-section');
       successSection.style.display = 'block';
 
-      const msg = data.type === 'day'
-        ? 'Your 24-hour Day Pass is active. Talk to Richard as much as you need today.'
-        : `Your 5-Prompt Pack is active. You have ${data.promptsLeft} prompts remaining.`;
+      let msg;
+      if (data.type === 'day_pass') msg = 'Your 24-hour Day Pass is ready. The 24 hours start with your first message.';
+      else if (data.promptsLeft !== null) msg = `Your access is active. You have ${data.promptsLeft} prompt${data.promptsLeft === 1 ? '' : 's'} remaining.`;
+      else msg = 'Your access is active. Talk to Richard as much as you need.';
       document.getElementById('success-msg').textContent = msg;
 
       // Auto-redirect after 8 seconds
